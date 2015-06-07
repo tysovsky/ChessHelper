@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     EditText etLetter2;
     EditText etNumber2;
 
-    public byte[] msg;
+    long VIBRATION_LONG = 2500;
+    long VIBRATION_SHORT = 1000;
+    long PAUSE_LONG = 2000;
+    long PAUSE_SHORT = 1000;
+
     Map<String, long[]> signals = new HashMap<String, long[]>();
 
     @Override
@@ -56,12 +59,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         bt.setOnDataReceivedListener(new BluetoothSPP.OnDataReceivedListener() {
             @Override
             public void onDataReceived(byte[] bytes, String s) {
-                msg = bytes;
-                vibrator.vibrate(signals.get("" + (char)bytes[1]), -1);
-                //vibrator.vibrate(signals.get("" + (char)bytes[1]), -1);
-                //vibrator.vibrate(signals.get("" + (char)bytes[2]), -1);
-                //vibrator.vibrate(signals.get("" + (char)bytes[3]), -1);
-                //handleSignal.run();
+                vibrator.vibrate(getSignalPattern(bytes), -1);
             }
         });
 
@@ -161,34 +159,53 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    Thread handleSignal = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            switch (msg[0]){
-                case 'A':
-                    long[] pattern = {0, 1000, 1000};
-                    vibrator.vibrate(pattern, -1);
-            }
-        }
-    });
 
     private void setupSignals(){
-        signals.put("A", new long[]{0, 3000, 1000});
-        signals.put("B", new long[]{0, 3000, 1000, 1000, 1000});
-        signals.put("C", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000});
-        signals.put("D", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000});
-        signals.put("E", new long[]{0, 3000, 3000});
-        signals.put("F", new long[]{0, 3000, 3000, 1000, 3000});
-        signals.put("G", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000});
-        signals.put("H", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000, 1000, 3000});
+        signals.put("A", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("B", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("C", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("D", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("E", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("F", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("G", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("H", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
 
-        signals.put("1", new long[]{0, 3000, 1000});
-        signals.put("2", new long[]{0, 3000, 1000, 1000, 1000});
-        signals.put("3", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000});
-        signals.put("4", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000});
-        signals.put("5", new long[]{0, 3000, 3000});
-        signals.put("6", new long[]{0, 3000, 3000, 1000, 3000});
-        signals.put("7", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000});
-        signals.put("8", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000, 1000, 3000});
+        signals.put("1", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("2", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("3", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("4", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
+        signals.put("5", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("6", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("7", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+        signals.put("8", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+    }
+
+    //Hacky, but it works
+    private long[] getSignalPattern(byte[] bytes){
+
+        int size1 = signals.get(""+(char)bytes[0]).length;
+        int size2 = signals.get(""+(char)bytes[1]).length;
+        int size3 = signals.get(""+(char)bytes[2]).length;
+        int size4 = signals.get(""+(char)bytes[3]).length;
+
+        long[] array = new long[size1 + size2 + size3 + size4];
+
+        for(int i = 0; i < size1;i++ ){
+            array[i] = signals.get(""+(char)bytes[0])[i];
+        }
+
+        for(int i = 0; i < size2;i++ ){
+            array[size1 +i -1] = signals.get(""+(char)bytes[1])[i];
+        }
+
+        for(int i = 0; i < size3;i++ ){
+            array[size1 + size2 + i -2] = signals.get(""+(char)bytes[2])[i];
+        }
+
+        for(int i = 0; i < size4;i++ ){
+            array[size1 + size2 + size3 + i - 3] = signals.get(""+(char)bytes[3])[i];
+        }
+
+        return array;
     }
 }

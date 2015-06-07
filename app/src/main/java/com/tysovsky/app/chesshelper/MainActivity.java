@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import app.akexorcist.bluetotohspp.library.BluetoothSPP;
@@ -32,6 +33,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     EditText etNumber2;
 
     public byte[] msg;
+    Map<String, long[]> signals = new HashMap<String, long[]>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +43,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         bt = new BluetoothSPP(this);
         vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         initializeViews();
+        setupSignals();
 
         //If Bluetooth is not available
         if(!bt.isBluetoothAvailable()){
@@ -54,7 +57,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
             @Override
             public void onDataReceived(byte[] bytes, String s) {
                 msg = bytes;
-                handleSignal.run();
+                vibrator.vibrate(signals.get("" + (char)bytes[1]), -1);
+                //vibrator.vibrate(signals.get("" + (char)bytes[1]), -1);
+                //vibrator.vibrate(signals.get("" + (char)bytes[2]), -1);
+                //vibrator.vibrate(signals.get("" + (char)bytes[3]), -1);
+                //handleSignal.run();
             }
         });
 
@@ -88,7 +95,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(intent, BluetoothState.REQUEST_ENABLE_BT);
         }
-        //Satrt the bluetooth service
+        //Start the bluetooth service
         else{
             if(!bt.isServiceAvailable()){
                 bt.setupService();
@@ -164,4 +171,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
     });
+
+    private void setupSignals(){
+        signals.put("A", new long[]{0, 3000, 1000});
+        signals.put("B", new long[]{0, 3000, 1000, 1000, 1000});
+        signals.put("C", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000});
+        signals.put("D", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000});
+        signals.put("E", new long[]{0, 3000, 3000});
+        signals.put("F", new long[]{0, 3000, 3000, 1000, 3000});
+        signals.put("G", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000});
+        signals.put("H", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000, 1000, 3000});
+
+        signals.put("1", new long[]{0, 3000, 1000});
+        signals.put("2", new long[]{0, 3000, 1000, 1000, 1000});
+        signals.put("3", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000});
+        signals.put("4", new long[]{0, 3000, 1000, 1000, 1000, 1000, 1000, 1000, 1000});
+        signals.put("5", new long[]{0, 3000, 3000});
+        signals.put("6", new long[]{0, 3000, 3000, 1000, 3000});
+        signals.put("7", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000});
+        signals.put("8", new long[]{0, 3000, 3000, 1000, 3000, 1000, 3000, 1000, 3000});
+    }
 }

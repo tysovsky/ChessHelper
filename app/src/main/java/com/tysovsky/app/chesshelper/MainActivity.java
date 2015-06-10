@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Vibrator;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -20,20 +22,23 @@ import app.akexorcist.bluetotohspp.library.DeviceList;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     BluetoothSPP bt;
-
     Vibrator vibrator;
+    public SharedPreferences sharedPreferences;
 
     Button btnConnect;
     Button btnSend;
+    Button btnSettings;
 
     EditText etLetter1;
     EditText etNumber1;
     EditText etLetter2;
     EditText etNumber2;
 
-    long VIBRATION_LONG = 2500;
+    public static String preferences = "preferences";
+
+    long VIBRATION_LONG = 4000;
     long VIBRATION_SHORT = 1000;
-    long PAUSE_LONG = 2000;
+    long PAUSE_LONG = 4000;
     long PAUSE_SHORT = 1000;
 
     Map<String, long[]> signals = new HashMap<String, long[]>();
@@ -45,6 +50,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         bt = new BluetoothSPP(this);
         vibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+
+
         initializeViews();
         setupSignals();
 
@@ -86,6 +93,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         });
     }
 
+    @Override
     public void onStart(){
         super.onStart();
         //Check is bluetooth is turned on. If not ask the user's permission to turn it on
@@ -102,6 +110,14 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
+    @Override
+    public void onResume(){
+        super.onResume();
+
+        setupSignals();
+
+    }
+    @Override
     public void onDestroy(){
         super.onDestroy();
         //Turn of the bluetooth service when app closes
@@ -124,6 +140,19 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 String msgToSend = etLetter1.getText().toString()+etNumber1.getText().toString()
                         + etLetter1.getText().toString() + etNumber2.getText().toString();
                 bt.send(msgToSend, true);
+
+                if(sharedPreferences.getBoolean("AUTO_DELETE", false))
+                {
+                    etLetter1.setText("");
+                    etLetter2.setText("");
+                    etNumber1.setText("");
+                    etNumber2.setText("");
+                }
+
+                break;
+            case R.id.btnSettings:
+                Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                MainActivity.this.startActivity(intent);
                 break;
         }
     }
@@ -133,6 +162,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btnConnect.setOnClickListener(this);
         btnSend = (Button)findViewById(R.id.btnSend);
         btnSend.setOnClickListener(this);
+        btnSettings = (Button)findViewById(R.id.btnSettings);
+        btnSettings.setOnClickListener(this);
 
         etLetter1 = (EditText)findViewById(R.id.etLetter1);
         etLetter2 = (EditText)findViewById(R.id.etLetter2);
@@ -161,6 +192,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
 
     private void setupSignals(){
+
+        sharedPreferences = getSharedPreferences(preferences, 0);
+        VIBRATION_SHORT = sharedPreferences.getLong("VIBRATION_SHORT", 1000);
+        VIBRATION_LONG = sharedPreferences.getLong("VIBRATION_LONG", 4000);
+        PAUSE_SHORT = sharedPreferences.getLong("PAUSE_SHORT", 1000);
+        PAUSE_LONG = (long)(sharedPreferences.getLong("PAUSE_LONG", 4000)/2);
+
+        signals.clear();
+
+        Log.i("Info", "Map size before: " + signals.size());
+
         signals.put("A", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_LONG});
         signals.put("B", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
         signals.put("C", new long[]{PAUSE_LONG, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_SHORT, VIBRATION_SHORT, PAUSE_LONG});
@@ -178,6 +220,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         signals.put("6", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
         signals.put("7", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
         signals.put("8", new long[]{PAUSE_LONG, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_SHORT, VIBRATION_LONG, PAUSE_LONG});
+
+        Log.i("Info", "Map size after: " + signals.size());
     }
 
     //Hacky, but it works
